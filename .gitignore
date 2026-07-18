@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+/dist
+/frontend/dist
+
+# Local Databases
+*.db
+*.db-journal
+
+# Environment Credentials (Private)
+.env
+backend/.env
+
+# IDE & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+.system_generated/

@@ -1,0 +1,86 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  passwordHash   String
+  name           String
+  education      String?
+  targetRole     String?
+  experience     Int?
+  englishLevel   String?
+  learningGoals  String?
+  targetDate     String?
+  dailyDuration  Int       @default(15) // in minutes
+  commStyle      String    @default("Professional") // "Professional" or "Calm" or "Supportive"
+  streak         Int       @default(0)
+  lastActive     DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model Progress {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  strengths   String?  // comma-separated or JSON string
+  weaknesses  String?  // comma-separated or JSON string
+  practiceTime Int     @default(0) // total practice minutes
+  confidence  Float    @default(0.0) // estimated confidence 0-100
+  lastUpdated DateTime @default(now())
+}
+
+model Mistake {
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  type          String   // "Grammar", "Pronunciation", "Filler"
+  originalText  String
+  correctedText String
+  explanation   String?
+  repeatCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+}
+
+model Vocabulary {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  word        String
+  definition  String?
+  context     String?
+  status      String   @default("Learned") // "Learned", "Review", "Mastered"
+  createdAt   DateTime @default(now())
+}
+
+model Session {
+  id                 String   @id // session uuid
+  userId             Int
+  type               String   // "Conversation", "HR", "Technical", "Behavioral"
+  mode               String   // "Practice", "Real", "General"
+  transcript         String   // JSON formatted array of messages
+  scoreGrammar       Float?
+  scorePronunciation Float?
+  scoreVocabulary    Float?
+  scoreFluency       Float?
+  scoreConfidence    Float?
+  scoreCommunication Float?
+  summary            String?
+  strengths          String?
+  weaknesses         String?
+  createdAt          DateTime @default(now())
+}
+
+model DailyPlan {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  date              String   // YYYY-MM-DD
+  grammarGoal       String?
+  vocabGoal         String?
+  pronunciationGoal String?
+  speakMission      String?
+  done              Boolean  @default(false)
+}
