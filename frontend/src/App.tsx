@@ -14,9 +14,14 @@ import VoiceCoach from './components/VoiceCoach';
 import InterviewCenter from './components/InterviewCenter';
 import LearningHub from './components/LearningHub';
 
-// Base API endpoints
-export const API_URL = `http://${window.location.hostname}:5000/api`;
-export const WS_URL = `ws://${window.location.hostname}:5000`;
+// Base API endpoints (Automatically switches between local development and cloud production)
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+export const API_URL = isLocal 
+  ? `http://${window.location.hostname}:5000/api` 
+  : `https://verbal-coach.onrender.com/api`;
+export const WS_URL = isLocal 
+  ? `ws://${window.location.hostname}:5000` 
+  : `wss://verbal-coach.onrender.com`;
 
 export interface UserProfile {
   id: number;
