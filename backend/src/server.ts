@@ -59,7 +59,8 @@ app.post('/api/auth/register', async (req, res) => {
 
     return res.status(201).json({ userId: user.id, name: user.name, email: user.email });
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    console.error('Registration database error:', error);
+    return res.status(500).json({ error: 'Authentication service temporarily unavailable.' });
   }
 });
 
@@ -77,7 +78,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     return res.json({ userId: user.id, name: user.name, email: user.email });
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    console.error('Login database error:', error);
+    return res.status(500).json({ error: 'Authentication service temporarily unavailable.' });
   }
 });
 
