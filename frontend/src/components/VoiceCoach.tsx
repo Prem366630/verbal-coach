@@ -283,6 +283,11 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
 
         speakText(reply);
       }
+      
+      else if (data.event === 'error') {
+        const errMsg = data.message;
+        setTranscript(prev => [...prev, { role: 'assistant', content: `[System Error] ${errMsg}` }]);
+      }
     };
 
     ws.onclose = () => {
