@@ -66,7 +66,7 @@ function App() {
 
   // Load user session
   useEffect(() => {
-    const savedUser = localStorage.getItem('coach_user');
+    const savedUser = sessionStorage.getItem('coach_user');
     if (savedUser) {
       const parsed = JSON.parse(savedUser);
       setUser(parsed);
@@ -115,7 +115,7 @@ function App() {
       }
 
       const userSession = { id: data.userId, name: data.name };
-      localStorage.setItem('coach_user', JSON.stringify(userSession));
+      sessionStorage.setItem('coach_user', JSON.stringify(userSession));
       setUser(userSession);
       
       if (isRegister) {
@@ -154,7 +154,7 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('coach_user');
+    sessionStorage.removeItem('coach_user');
     setUser(null);
     setProfile(null);
   };
