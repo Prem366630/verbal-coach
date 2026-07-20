@@ -58,7 +58,7 @@ async function generateAnalysis(systemPrompt, userMessage, context = '') {
     if (aiClient) {
         try {
             const response = await aiClient.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: [
                     { role: 'user', parts: [{ text: `${systemPrompt}\n\nContext:\n${context}\n\nUser Input: ${userMessage}` }] }
                 ]
