@@ -44,7 +44,13 @@ class AgentManager {
         this.activeSessions.set(sessionId, sessionState);
         let initialMessage = '';
         if (type === 'Conversation') {
-            initialMessage = `Hello ${user?.name || 'there'}! I am your career coach. Let's practice communicating for your career goal as a ${careerGoal}. What is your biggest challenge currently?`;
+            const greetings = [
+                `Hello ${user?.name || 'there'}! As your communication coach, let's work on your career goal: "${careerGoal}". What specific scenario or topic would you like to practice today?`,
+                `Hi ${user?.name || 'there'}! Let's sharpen your English and communication for your target role as a ${careerGoal}. What is the biggest communication challenge you faced recently?`,
+                `Hello ${user?.name || 'there'}! Ready for today's session? In your career as a ${careerGoal}, clear communication is key. What area or project do you want to describe to me first?`,
+                `Welcome back, ${user?.name || 'there'}. Let's target your speaking confidence and vocabulary for the ${careerGoal} role. Tell me, how was your day, and did you have any technical or professional discussions today?`
+            ];
+            initialMessage = greetings[Math.floor(Math.random() * greetings.length)];
         }
         else {
             // Interview initialization

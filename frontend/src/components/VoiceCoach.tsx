@@ -122,7 +122,8 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
   const speakText = (text: string) => {
     if (!synthRef.current || muted) return;
 
-    // Interruption handler: Cancel active utterance if any
+    // Stop listening before starting speech to avoid self-interruption
+    stopSpeechRecognition();
     synthRef.current.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
@@ -134,11 +135,17 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
     
     utterance.onstart = () => {
       setCoachSpeaking(true);
+      stopSpeechRecognition();
     };
 
     utterance.onend = () => {
       setCoachSpeaking(false);
       // Restart speech recognition after coach finishes talking
+      startSpeechRecognition();
+    };
+
+    utterance.onerror = () => {
+      setCoachSpeaking(false);
       startSpeechRecognition();
     };
 

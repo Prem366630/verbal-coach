@@ -415,7 +415,7 @@ function App() {
 
       {/* Main Panel Viewport */}
       <main className="main-content">
-        {activeTab === 'dashboard' && profile && <Dashboard profile={profile} refreshProfile={() => fetchProfile(user.id)} />}
+        {activeTab === 'dashboard' && profile && <Dashboard profile={profile} refreshProfile={() => fetchProfile(user.id)} onStartCoaching={() => setActiveTab('voice')} />}
         {activeTab === 'voice' && profile && <VoiceCoach profile={profile} />}
         {activeTab === 'interview' && profile && <InterviewCenter profile={profile} />}
         {activeTab === 'learning' && profile && <LearningHub profile={profile} />}

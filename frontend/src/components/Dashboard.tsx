@@ -14,6 +14,7 @@ import { API_URL, type UserProfile } from '../App';
 interface DashboardProps {
   profile: UserProfile;
   refreshProfile: () => void;
+  onStartCoaching: () => void;
 }
 
 interface DashboardStats {
@@ -25,7 +26,7 @@ interface DashboardStats {
   recentPerformance: any[];
 }
 
-export default function Dashboard({ profile, refreshProfile }: DashboardProps) {
+export default function Dashboard({ profile, refreshProfile, onStartCoaching }: DashboardProps) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [dailyPlan, setDailyPlan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -233,7 +234,7 @@ export default function Dashboard({ profile, refreshProfile }: DashboardProps) {
               Start a voice first conversational training session with your AI coach.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--primary)', padding: '0.6rem 1.2rem', borderRadius: '0.5rem', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
+              <div onClick={onStartCoaching} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--primary)', padding: '0.6rem 1.2rem', borderRadius: '0.5rem', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
                 <Play size={16} /> Start Coaching
               </div>
             </div>
