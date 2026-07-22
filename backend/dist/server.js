@@ -217,6 +217,53 @@ app.get('/api/reports', async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 });
+// --- VOCABULARY & PRONUNCIATION TRAINER ROUTES ---
+app.get('/api/vocabulary', async (req, res) => {
+    const userId = parseInt(req.query.userId);
+    if (!userId)
+        return res.status(400).json({ error: 'Missing userId' });
+    try {
+        const vocab = await db_1.default.vocabulary.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' }
+        });
+        return res.json(vocab);
+    }
+    catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+app.post('/api/vocabulary/status', async (req, res) => {
+    const { userId, word, status, definition, context } = req.body;
+    if (!userId || !word)
+        return res.status(400).json({ error: 'Missing parameters' });
+    try {
+        const existing = await db_1.default.vocabulary.findFirst({
+            where: { userId, word }
+        });
+        if (existing) {
+            await db_1.default.vocabulary.update({
+                where: { id: existing.id },
+                data: { status }
+            });
+        }
+        else {
+            await db_1.default.vocabulary.create({
+                data: {
+                    userId,
+                    word,
+                    status: status || 'Learned',
+                    definition: definition || 'Corporate executive vocabulary term',
+                    context: context || 'Used in professional meetings and interviews'
+                }
+            });
+        }
+        return res.json({ success: true });
+    }
+    catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
 // --- RESUME & JD PARSER ROUTE ---
 app.post('/api/resume/parse', async (req, res) => {
     const { userId, resumeText, jobDescription } = req.body;
