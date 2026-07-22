@@ -7,7 +7,8 @@ import {
   Sun, 
   Moon, 
   LogOut,
-  Sparkles
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import VoiceCoach from './components/VoiceCoach';
@@ -50,6 +51,8 @@ function App() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authSlowNotice, setAuthSlowNotice] = useState(false);
 
   // Onboarding Setup State
   const [isOnboarding, setIsOnboarding] = useState(false);
@@ -98,6 +101,13 @@ function App() {
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setAuthLoading(true);
+    setAuthSlowNotice(false);
+
+    const slowTimer = setTimeout(() => {
+      setAuthSlowNotice(true);
+    }, 2500);
+
     const endpoint = isRegister ? '/auth/register' : '/auth/login';
     const body = isRegister ? { email, password, name } : { email, password };
 
@@ -107,6 +117,7 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
+      clearTimeout(slowTimer);
       const data = await res.json();
 
       if (!res.ok) {
@@ -124,7 +135,12 @@ function App() {
         fetchProfile(data.userId);
       }
     } catch (err) {
+      clearTimeout(slowTimer);
       setErrorMsg('Cannot reach backend server. Make sure it is running.');
+    } finally {
+      clearTimeout(slowTimer);
+      setAuthLoading(false);
+      setAuthSlowNotice(false);
     }
   };
 
@@ -213,9 +229,21 @@ function App() {
               </div>
             )}
 
-            <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }}>
-              {isRegister ? 'Create Account' : 'Sign In'}
+            <button 
+              type="submit" 
+              className="btn" 
+              disabled={authLoading}
+              style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem', opacity: authLoading ? 0.75 : 1, cursor: authLoading ? 'not-allowed' : 'pointer', gap: '0.5rem' }}
+            >
+              {authLoading && <Loader2 className="spin" size={18} />}
+              {authLoading ? (isRegister ? 'Creating Account...' : 'Signing In...') : (isRegister ? 'Create Account' : 'Sign In')}
             </button>
+
+            {authSlowNotice && (
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center', marginTop: '0.6rem' }}>
+                ⚡ Connecting to cloud server... Please wait a moment.
+              </p>
+            )}
           </form>
 
           <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>

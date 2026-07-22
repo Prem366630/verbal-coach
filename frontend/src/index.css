@@ -306,3 +306,25 @@ h1, h2, h3, h4, h5, h6 {
     display: none;
   }
 }
+
+/* Animations & Spinners */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulseShimmer {
+  0% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  100% { opacity: 0.6; }
+}
+
+.skeleton-pulse {
+  animation: pulseShimmer 1.5s ease-in-out infinite;
+  background: var(--card-border);
+  border-radius: 0.5rem;
+}
