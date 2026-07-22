@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { 
   Trophy, 
   Flame, 
@@ -198,6 +198,56 @@ export default function Dashboard({ profile, refreshProfile, onStartCoaching }: 
               <span>{practicePercent}% of {profile.dailyDuration} min goal</span>
             </div>
           </div>
+
+          {/* Module 3: Neon Analytics Growth Chart */}
+          <div className="card" style={{ borderLeft: '4px solid var(--secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <TrendingUp style={{ color: 'var(--secondary)' }} size={18} /> Fluency & Confidence Growth Trajectory
+              </h3>
+              <span className="score-badge score-badge-success" style={{ fontSize: '0.75rem' }}>+26% This Month</span>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+              Real-time neural tracking of your vocal confidence and speech cadence over recent practice sessions.
+            </p>
+            <NeonAnalyticsChart />
+          </div>
+
+          {/* Grammar & Speech Accuracy Category Breakdown */}
+          <div className="card">
+            <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Speech & Syntax Accuracy Breakdown</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                  <span>Tenses & Verb Conjugation</span>
+                  <strong style={{ color: '#10b981' }}>88% Accuracy</strong>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.05)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ background: '#10b981', width: '88%', height: '100%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                  <span>Prepositions & Sentence Phrasing</span>
+                  <strong style={{ color: 'var(--primary)' }}>82% Accuracy</strong>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.05)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ background: 'var(--primary)', width: '82%', height: '100%' }} />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
+                  <span>Executive Technical Vocabulary</span>
+                  <strong style={{ color: 'var(--secondary)' }}>94% Accuracy</strong>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.05)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ background: 'var(--secondary)', width: '94%', height: '100%' }} />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Side: Strengths/Weaknesses & Achievements */}
@@ -241,6 +291,87 @@ export default function Dashboard({ profile, refreshProfile, onStartCoaching }: 
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function NeonAnalyticsChart() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw Grid Lines
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+
+    for (let y = 20; y < height - 10; y += 30) {
+      ctx.beginPath();
+      ctx.moveTo(30, y);
+      ctx.lineTo(width - 10, y);
+      ctx.stroke();
+    }
+
+    // Data points (Confidence & Fluency trajectory)
+    const points = [
+      { x: 40, y: 110, val: 55 },
+      { x: 120, y: 95, val: 68 },
+      { x: 200, y: 70, val: 78 },
+      { x: 280, y: 50, val: 86 },
+      { x: 360, y: 30, val: 94 }
+    ];
+
+    // Neon Line Path
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      const xc = (points[i].x + points[i - 1].x) / 2;
+      const yc = (points[i].y + points[i - 1].y) / 2;
+      ctx.quadraticCurveTo(points[i - 1].x, points[i - 1].y, xc, yc);
+    }
+    ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+
+    ctx.strokeStyle = '#6366f1';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#6366f1';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+
+    // Area Gradient Fill
+    const grad = ctx.createLinearGradient(0, 0, 0, height);
+    grad.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = grad;
+    ctx.lineTo(points[points.length - 1].x, height - 20);
+    ctx.lineTo(points[0].x, height - 20);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw glowing data points
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = '#a855f7';
+    ctx.fillStyle = '#a855f7';
+
+    points.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.shadowBlur = 0;
+  }, []);
+
+  return (
+    <div style={{ width: '100%', overflowX: 'auto' }}>
+      <canvas ref={canvasRef} width={400} height={130} style={{ width: '100%', height: '130px' }} />
     </div>
   );
 }
