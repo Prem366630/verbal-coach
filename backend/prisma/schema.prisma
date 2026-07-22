@@ -20,6 +20,8 @@ model User {
   targetDate     String?
   dailyDuration  Int       @default(15) // in minutes
   commStyle      String    @default("Professional") // "Professional" or "Calm" or "Supportive"
+  resumeText     String?
+  parsedSkills   String?   // JSON string of detected skills and tech stack
   streak         Int       @default(0)
   lastActive     DateTime?
   createdAt      DateTime  @default(now())

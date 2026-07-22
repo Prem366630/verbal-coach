@@ -37,6 +37,8 @@ export interface UserProfile {
   dailyDuration: number;
   commStyle: string;
   streak: number;
+  resumeText?: string;
+  parsedSkills?: string;
 }
 
 function App() {

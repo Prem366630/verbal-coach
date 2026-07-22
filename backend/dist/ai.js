@@ -54,11 +54,11 @@ else {
 /**
  * Clean helper function to invoke the Gemini LLM or use the rules-based engine fallback.
  */
-async function generateAnalysis(systemPrompt, userMessage, context = '') {
+async function generateAnalysis(systemPrompt, userMessage, context = '', modelName = 'gemini-1.5-pro') {
     if (aiClient) {
         try {
             const response = await aiClient.models.generateContent({
-                model: 'gemini-1.5-flash',
+                model: modelName,
                 contents: [
                     { role: 'user', parts: [{ text: `${systemPrompt}\n\nContext:\n${context}\n\nUser Input: ${userMessage}` }] }
                 ]
@@ -66,7 +66,19 @@ async function generateAnalysis(systemPrompt, userMessage, context = '') {
             return response.text || '';
         }
         catch (error) {
-            console.error('Gemini API call failed, using fallback engine.', error);
+            console.error(`Gemini API call (${modelName}) failed, attempting fallback model...`, error);
+            if (modelName === 'gemini-1.5-pro') {
+                try {
+                    const fallbackRes = await aiClient.models.generateContent({
+                        model: 'gemini-1.5-flash',
+                        contents: [
+                            { role: 'user', parts: [{ text: `${systemPrompt}\n\nContext:\n${context}\n\nUser Input: ${userMessage}` }] }
+                        ]
+                    });
+                    return fallbackRes.text || '';
+                }
+                catch (e) { }
+            }
         }
     }
     // Fallback Rule Engine

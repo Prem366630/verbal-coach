@@ -39,19 +39,31 @@ export interface AnalysisResult {
 export async function generateAnalysis(
   systemPrompt: string,
   userMessage: string,
-  context: string = ''
+  context: string = '',
+  modelName: string = 'gemini-1.5-pro'
 ): Promise<string> {
   if (aiClient) {
     try {
       const response = await aiClient.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: modelName,
         contents: [
           { role: 'user', parts: [{ text: `${systemPrompt}\n\nContext:\n${context}\n\nUser Input: ${userMessage}` }] }
         ]
       });
       return response.text || '';
     } catch (error) {
-      console.error('Gemini API call failed, using fallback engine.', error);
+      console.error(`Gemini API call (${modelName}) failed, attempting fallback model...`, error);
+      if (modelName === 'gemini-1.5-pro') {
+        try {
+          const fallbackRes = await aiClient.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: [
+              { role: 'user', parts: [{ text: `${systemPrompt}\n\nContext:\n${context}\n\nUser Input: ${userMessage}` }] }
+            ]
+          });
+          return fallbackRes.text || '';
+        } catch (e) {}
+      }
     }
   }
 

@@ -44,6 +44,7 @@ const dotenv = __importStar(require("dotenv"));
 const crypto = __importStar(require("crypto"));
 const db_1 = __importDefault(require("./db"));
 const agentManager_1 = require("./agents/agentManager");
+const ai_1 = require("./ai");
 dotenv.config();
 const app = (0, express_1.default)();
 const server = http.createServer(app);
@@ -214,6 +215,74 @@ app.get('/api/reports', async (req, res) => {
     }
     catch (error) {
         return res.status(500).json({ error: error.message });
+    }
+});
+// --- RESUME & JD PARSER ROUTE ---
+app.post('/api/resume/parse', async (req, res) => {
+    const { userId, resumeText, jobDescription } = req.body;
+    if (!userId || !resumeText) {
+        return res.status(400).json({ error: 'Missing userId or resumeText' });
+    }
+    try {
+        const prompt = `
+You are an Executive Resume & Candidate Talent Evaluator. Analyze the provided Candidate Resume text and optional target Job Description.
+
+Candidate Resume Text:
+"""
+${resumeText}
+"""
+
+Target Job Description:
+"""
+${jobDescription || 'Not specified'}
+"""
+
+Respond strictly with a valid JSON object matching this schema:
+{
+  "candidateName": "Extracted name or User",
+  "detectedRole": "Primary target software or engineering role detected",
+  "primarySkills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"],
+  "experienceSummary": "A concise 2-sentence summary of candidate technical background",
+  "interviewFocusAreas": ["System Architecture", "Coding Standards", "Ownership & Problem Solving"],
+  "strengthAreas": ["Strong backend experience", "Clear project scope"],
+  "recommendedQuestions": [
+    "Tell me about a challenging project on your resume.",
+    "How do you handle system architecture tradeoffs?"
+  ]
+}
+`;
+        const rawJson = await (0, ai_1.generateAnalysis)('Output strictly valid JSON only.', prompt, '', 'gemini-1.5-pro');
+        let parsedData = {};
+        try {
+            const match = rawJson.match(/\{[\s\S]*\}/);
+            if (match) {
+                parsedData = JSON.parse(match[0]);
+            }
+            else {
+                parsedData = JSON.parse(rawJson);
+            }
+        }
+        catch (e) {
+            parsedData = {
+                detectedRole: 'Software Developer',
+                primarySkills: ['Full-Stack', 'APIs', 'Problem Solving'],
+                experienceSummary: 'Experienced candidate in software development and project delivery.',
+                interviewFocusAreas: ['Technical Architecture', 'Communication Clarity']
+            };
+        }
+        // Persist parsed resume skills to database User profile
+        await db_1.default.user.update({
+            where: { id: parseInt(userId) },
+            data: {
+                resumeText: resumeText.substring(0, 5000),
+                parsedSkills: JSON.stringify(parsedData)
+            }
+        });
+        return res.json({ success: true, parsedData });
+    }
+    catch (error) {
+        console.error('Resume parsing error:', error);
+        return res.status(500).json({ error: 'Failed to analyze resume.' });
     }
 });
 // --- WEBSOCKET VOICE SERVER ---

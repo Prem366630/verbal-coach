@@ -6,9 +6,12 @@ import {
   CheckCircle, 
   AlertCircle, 
   TrendingUp, 
-  ChevronRight
+  ChevronRight,
+  FileText,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
-import { WS_URL, type UserProfile } from '../App';
+import { API_URL, WS_URL, type UserProfile } from '../App';
 
 interface InterviewCenterProps {
   profile: UserProfile;
@@ -20,6 +23,13 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
   const [mode, setMode] = useState<'Practice' | 'Real'>('Practice');
   const [jobDescription, setJobDescription] = useState('');
   const [targetRole, setTargetRole] = useState(profile.targetRole || '');
+
+  // Resume Parser State
+  const [resumeText, setResumeText] = useState('');
+  const [parsingResume, setParsingResume] = useState(false);
+  const [parsedProfile, setParsedProfile] = useState<any>(
+    profile.parsedSkills ? (typeof profile.parsedSkills === 'string' ? JSON.parse(profile.parsedSkills) : profile.parsedSkills) : null
+  );
 
   // Active Session State
   const [activeSession, setActiveSession] = useState(false);
@@ -172,6 +182,34 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
     setInterimInput('');
   };
 
+  const handleParseResume = async () => {
+    if (!resumeText.trim()) return;
+    setParsingResume(true);
+
+    try {
+      const res = await fetch(`${API_URL}/resume/parse`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: profile.id,
+          resumeText,
+          jobDescription
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.parsedData) {
+        setParsedProfile(data.parsedData);
+        if (data.parsedData.detectedRole) {
+          setTargetRole(data.parsedData.detectedRole);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setParsingResume(false);
+    }
+  };
+
   const stopInterview = (triggerReport = true) => {
     stopSpeechRecognition();
     if (synthRef.current) synthRef.current.cancel();
@@ -196,10 +234,71 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
       </header>
 
       {!activeSession && !evaluationReport && (
-        <section className="card" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '1.4rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Settings style={{ color: 'var(--primary)' }} /> Interview Setup Config
-          </h2>
+        <div style={{ maxWidth: '800px', margin: '0 auto 2rem auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          {/* Resume Parser Card */}
+          <section className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
+            <h2 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText style={{ color: 'var(--primary)' }} /> AI Resume & JD Parser (Gemini 1.5 Pro)
+            </h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
+              Paste your Resume text below. Gemini 1.5 Pro will extract your tech stack, project experience, and skill profile to generate 100% realistic interview questions.
+            </p>
+
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Resume Text / Experience Overview</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>Powered by Gemini 1.5 Pro</span>
+              </label>
+              <textarea 
+                className="form-input" 
+                rows={4} 
+                value={resumeText} 
+                onChange={e => setResumeText(e.target.value)} 
+                placeholder="Paste your Resume text here (e.g. 4+ years Node.js, React, AWS, Docker experience, led backend microservices migration...)" 
+              />
+            </div>
+
+            <button 
+              onClick={handleParseResume} 
+              disabled={parsingResume || !resumeText.trim()}
+              className="btn" 
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: (parsingResume || !resumeText.trim()) ? 0.6 : 1 }}
+            >
+              {parsingResume ? <Loader2 className="spin" size={18} /> : <Sparkles size={18} />}
+              {parsingResume ? 'Analyzing Background with Gemini Pro...' : 'Analyze Resume & Link to AI Coach'}
+            </button>
+
+            {/* Extracted Profile Skills Summary Card */}
+            {parsedProfile && (
+              <div style={{ marginTop: '1.5rem', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '0.75rem', padding: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <CheckCircle style={{ color: 'var(--primary)' }} size={20} />
+                  <strong style={{ fontSize: '1rem' }}>Extracted Candidate Profile ({parsedProfile.detectedRole})</strong>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                  {parsedProfile.experienceSummary}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {parsedProfile.primarySkills?.map((skill: string, i: number) => (
+                    <span key={i} className="score-badge score-badge-success" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>
+                      {skill}
+                    </span>
+                  ))}
+                  {parsedProfile.interviewFocusAreas?.map((focus: string, i: number) => (
+                    <span key={i} className="score-badge score-badge-warning" style={{ fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>
+                      Focus: {focus}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section className="card">
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Settings style={{ color: 'var(--primary)' }} /> Interview Setup Config
+            </h2>
 
           <div className="responsive-grid-2">
             <div className="form-group">
@@ -247,6 +346,7 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
             </button>
           </div>
         </section>
+      </div>
       )}
 
       {activeSession && (
