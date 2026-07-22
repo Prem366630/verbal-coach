@@ -337,7 +337,7 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
         </p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: '1.5rem' }}>
+      <div className="voice-grid">
         {/* Left Side: Waveform and Conversation logs */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           

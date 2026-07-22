@@ -201,7 +201,7 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
             <Settings style={{ color: 'var(--primary)' }} /> Interview Setup Config
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+          <div className="responsive-grid-2">
             <div className="form-group">
               <label className="form-label">Interview Category</label>
               <select className="form-input" value={interviewType} onChange={e => setInterviewType(e.target.value as any)}>
@@ -250,7 +250,7 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
       )}
 
       {activeSession && (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+        <div className="responsive-grid-2-1">
           {/* Interview Question Panel */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
             <div style={{ borderBottom: '1px solid var(--card-border)', paddingBottom: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

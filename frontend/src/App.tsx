@@ -365,8 +365,37 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Sidebar Navigation */}
-      <aside className="sidebar">
+      {/* Mobile Top Bar (<768px) */}
+      <header className="mobile-header">
+        <div className="sidebar-logo" style={{ marginBottom: 0 }}>
+          <Sparkles size={20} />
+          <span>VerbalCoach</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button 
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="btn btn-secondary" 
+            style={{ padding: '0.4rem', minWidth: 'auto', display: 'flex', alignItems: 'center' }}
+            title="Toggle Theme"
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <div style={{ background: 'var(--primary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: '0.85rem' }}>
+            {user.name.charAt(0).toUpperCase()}
+          </div>
+          <button 
+            onClick={handleLogout}
+            className="btn btn-secondary" 
+            style={{ padding: '0.4rem', border: 'none', color: 'var(--accent-err)' }}
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Desktop Sidebar Navigation (>=768px) */}
+      <aside className="sidebar desktop-sidebar">
         <div>
           <div className="sidebar-logo">
             <Sparkles size={24} />
@@ -448,6 +477,38 @@ function App() {
         {activeTab === 'interview' && profile && <InterviewCenter profile={profile} />}
         {activeTab === 'learning' && profile && <LearningHub profile={profile} />}
       </main>
+
+      {/* Mobile Bottom Navigation Bar (<768px) */}
+      <nav className="mobile-bottom-nav">
+        <button 
+          className={`mobile-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          onClick={() => setActiveTab('dashboard')}
+        >
+          <LayoutDashboard size={20} />
+          <span>Dashboard</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'voice' ? 'active' : ''}`}
+          onClick={() => setActiveTab('voice')}
+        >
+          <Mic size={20} />
+          <span>Voice</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'interview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('interview')}
+        >
+          <Briefcase size={20} />
+          <span>Interview</span>
+        </button>
+        <button 
+          className={`mobile-nav-item ${activeTab === 'learning' ? 'active' : ''}`}
+          onClick={() => setActiveTab('learning')}
+        >
+          <BookOpen size={20} />
+          <span>Learning</span>
+        </button>
+      </nav>
     </div>
   );
 }
