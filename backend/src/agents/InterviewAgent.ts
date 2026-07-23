@@ -1,7 +1,7 @@
 import { generateAnalysis } from '../ai';
 
 export interface InterviewConfig {
-  type: 'HR' | 'Technical' | 'Behavioral' | 'Managerial';
+  type: 'HR' | 'Technical' | 'Behavioral' | 'Managerial' | 'SystemDesign' | 'STARMethod' | 'ExecutivePresentation';
   mode: 'Practice' | 'Real';
   jobDescription?: string;
   targetRole?: string;
@@ -58,47 +58,28 @@ export class InterviewAgent {
       lowercase.includes("i don't know") || 
       lowercase.includes("not sure") || 
       lowercase.includes("forgot") || 
-      (userResponse.split(' ').length < 4 && lowercase.includes('no'));
+      lowercase.includes("no idea");
 
-    if (indicatesKnowledgeGap && config.mode === 'Practice') {
+    if (indicatesKnowledgeGap && !this.lastAnswerWasKnowledgeGap) {
       this.lastAnswerWasKnowledgeGap = true;
-      const topicPrompt = `Identify what technical concept or behavioral skill the user is struggling with based on this history:`;
-      const topic = await generateAnalysis(topicPrompt, userResponse, JSON.stringify(history));
-      
-      return {
-        question: `No worries! In professional communication, if you don't know a concept, you can say: "I haven't had the opportunity to work deeply with that specific technology yet, but I understand it is used for...". Let's practice. Can you repeat that, or explain how you would research it?`,
-        isFollowUp: true,
-        isComplete: false
-      };
-    }
-
-    if (this.lastAnswerWasKnowledgeGap) {
-      this.lastAnswerWasKnowledgeGap = false;
-      // Continue to next question
-    }
-
-    // Practice Mode: generate a dynamic challenging follow-up
-    if (config.mode === 'Practice' && Math.random() > 0.4 && this.currentQuestionIndex > 0) {
-      const prompt = `
-        You are the Interviewer. The user just answered the question. 
-        Challenge their claim or ask a deep follow-up question.
-        Example: If they said they built a backend, ask about architecture, performance bottlenecks, or database choices.
-        Keep the follow-up concise and professional.
+      const followUpPrompt = `
+        The candidate responded: "${userResponse}".
+        They expressed uncertainty or a knowledge gap. Ask a helpful, supportive follow-up question that guides them to think about how they would approach finding the answer or handling the gap professionally. Keep it concise.
       `;
-      const followUp = await generateAnalysis(prompt, userResponse, JSON.stringify(history));
+      const followUpQuestion = await generateAnalysis(followUpPrompt, userResponse);
       return {
-        question: followUp,
+        question: followUpQuestion,
         isFollowUp: true,
         isComplete: false
       };
     }
 
-    // Increment question index
+    this.lastAnswerWasKnowledgeGap = false;
     this.currentQuestionIndex++;
 
     if (this.currentQuestionIndex >= this.questions.length) {
       return {
-        question: "That concludes our interview questions today. Thank you for your time. I will now compile your evaluation report.",
+        question: "That concludes our workplace simulation & interview questions today. Thank you for your time. I will now compile your executive evaluation report.",
         isFollowUp: false,
         isComplete: true
       };
@@ -111,8 +92,32 @@ export class InterviewAgent {
     };
   }
 
-  private getDefaultQuestions(type: 'HR' | 'Technical' | 'Behavioral' | 'Managerial'): string[] {
+  private getDefaultQuestions(type: 'HR' | 'Technical' | 'Behavioral' | 'Managerial' | 'SystemDesign' | 'STARMethod' | 'ExecutivePresentation'): string[] {
     switch (type) {
+      case 'SystemDesign':
+        return [
+          "Walk me through a high-availability system architecture you designed. How did you handle fault tolerance and data replication?",
+          "Suppose your microservices architecture experiences a sudden 10x traffic spike. How do you prevent cascading failures?",
+          "How do you decide between SQL relational schemas versus NoSQL document databases for high-throughput transactional systems?",
+          "Describe your strategy for API rate limiting, authentication, and edge caching using CDNs.",
+          "How do you monitor distributed traces and debug latency bottlenecks across multiple microservices?"
+        ];
+      case 'STARMethod':
+        return [
+          "Describe a high-stakes crisis situation on a project (SITUATION/TASK). What specific actions did you take (ACTION), and what was the quantifiable business outcome (RESULT)?",
+          "Give an example of when you had to convince skeptical executive stakeholders to adopt a major technical direction.",
+          "Tell me about a time when a critical bug occurred in production. How did you lead the incident response and post-mortem?",
+          "Describe a situation where you had to deliver a critical milestone despite missing half your engineering resources.",
+          "Give an example of how you mentored a struggling colleague and helped them improve their technical output."
+        ];
+      case 'ExecutivePresentation':
+        return [
+          "Imagine you are presenting a major Q3 technical roadmap to non-technical C-suite executives. How do you open your presentation to command immediate authority?",
+          "How do you handle hostile or aggressive questions from audience members during a live product demo?",
+          "Explain a complex distributed systems concept (like Paxos or Raft Consensus) in 60 seconds as if presenting to a non-technical audience.",
+          "How do you structure your vocal cadence, body language, and slide deck when pitching a high-value technical proposal?",
+          "Describe your strategy for conducting executive Q&A sessions after a major project presentation."
+        ];
       case 'Technical':
         return [
           "Tell me about a challenging technical architectural design you built and why you chose it.",

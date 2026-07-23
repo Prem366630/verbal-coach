@@ -19,7 +19,7 @@ interface InterviewCenterProps {
 
 export default function InterviewCenter({ profile }: InterviewCenterProps) {
   // Settings Form State
-  const [interviewType, setInterviewType] = useState<'HR' | 'Technical' | 'Behavioral' | 'Managerial'>('Technical');
+  const [interviewType, setInterviewType] = useState<'HR' | 'Technical' | 'Behavioral' | 'Managerial' | 'SystemDesign' | 'STARMethod' | 'ExecutivePresentation'>('Technical');
   const [mode, setMode] = useState<'Practice' | 'Real'>('Practice');
   const [jobDescription, setJobDescription] = useState('');
   const [targetRole, setTargetRole] = useState(profile.targetRole || '');
@@ -305,6 +305,9 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
               <label className="form-label">Interview Category</label>
               <select className="form-input" value={interviewType} onChange={e => setInterviewType(e.target.value as any)}>
                 <option value="Technical">Technical Interview (Systems, Coding, Logic)</option>
+                <option value="SystemDesign">System Architecture & Tradeoff Defense</option>
+                <option value="STARMethod">Behavioral STAR Method Practice</option>
+                <option value="ExecutivePresentation">Executive Presentation & Public Speaking</option>
                 <option value="HR">HR Interview (Values, Alignment)</option>
                 <option value="Behavioral">Behavioral Interview (Situation/Task/Action/Result)</option>
                 <option value="Managerial">Managerial Interview (Mentorship, Scale)</option>
