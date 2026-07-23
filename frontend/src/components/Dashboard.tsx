@@ -7,7 +7,8 @@ import {
   AlertCircle, 
   CheckCircle,
   Play,
-  Award
+  Award,
+  Sparkles
 } from 'lucide-react';
 import { API_URL, type UserProfile } from '../App';
 
@@ -92,38 +93,52 @@ export default function Dashboard({ profile, refreshProfile, onStartCoaching }: 
         </p>
       </header>
 
-      {/* Highlights Grid */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '0.75rem', color: '#ef4444' }}>
-            <Flame size={28} />
+      {/* Highlights Grid or Onboarding Card */}
+      {(!stats || (stats.totalPracticeMinutes === 0 && stats.streak === 0)) ? (
+        <section className="card" style={{ marginBottom: '2.5rem', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))', border: '1px solid rgba(99, 102, 241, 0.3)', padding: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Sparkles style={{ color: 'var(--primary)' }} /> Welcome to your AI Coaching Roadmap!
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem', maxWidth: '650px' }}>
+            Complete your first 2-minute voice practice or mock interview session below. The AI coach will analyze your speech pace, grammar accuracy, and vocal confidence to generate your personalized performance metrics.
+          </p>
+          <button onClick={onStartCoaching} className="btn" style={{ padding: '0.8rem 1.8rem', fontSize: '1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Play size={18} /> Start First 2-Min Session
+          </button>
+        </section>
+      ) : (
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '0.75rem', color: '#ef4444' }}>
+              <Flame size={28} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Daily Streak</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{stats?.streak || 0} Days</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Daily Streak</div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{stats?.streak || 0} Days</div>
-          </div>
-        </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '0.75rem', borderRadius: '0.75rem', color: 'var(--primary)' }}>
-            <Clock size={28} />
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '0.75rem', borderRadius: '0.75rem', color: 'var(--primary)' }}>
+              <Clock size={28} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Today's Practice</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{stats?.totalPracticeMinutes || 0} / {profile.dailyDuration} min</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Today's Practice</div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{stats?.totalPracticeMinutes || 0} / {profile.dailyDuration} min</div>
-          </div>
-        </div>
 
-        <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: '0.75rem', color: '#10b981' }}>
-            <TrendingUp size={28} />
+          <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.75rem', borderRadius: '0.75rem', color: '#10b981' }}>
+              <TrendingUp size={28} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Avg Confidence</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{stats?.averageConfidence || 0}%</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Avg Confidence</div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 800 }}>{stats?.averageConfidence || 0}%</div>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Main Layout Grid */}
       <div className="dashboard-grid">

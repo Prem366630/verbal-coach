@@ -4,7 +4,8 @@ import {
   MicOff, 
   Volume2, 
   VolumeX, 
-  AlertTriangle
+  AlertTriangle,
+  Send
 } from 'lucide-react';
 import { WS_URL, type UserProfile } from '../App';
 
@@ -308,6 +309,14 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
     }));
   };
 
+  const handleDoneSpeaking = () => {
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (interimInput && interimInput.trim().length > 0) {
+      sendUserMessage(interimInput.trim());
+      setInterimInput('');
+    }
+  };
+
   const stopSession = () => {
     stopSpeechRecognition();
     stopVisualizer();
@@ -354,12 +363,22 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
             </div>
 
             {activeSession ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
-                <button onClick={stopSession} className="btn" style={{ background: 'var(--accent-err)' }}>
-                  <MicOff size={18} /> Stop Coaching
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {!coachSpeaking && (
+                  <button 
+                    onClick={handleDoneSpeaking} 
+                    disabled={!interimInput.trim()} 
+                    className="btn" 
+                    style={{ opacity: !interimInput.trim() ? 0.6 : 1 }}
+                  >
+                    <Send size={18} /> Done Speaking (Send)
+                  </button>
+                )}
+                <button onClick={stopSession} className="btn btn-secondary" style={{ color: 'var(--accent-err)' }}>
+                  <MicOff size={18} /> Stop Session
                 </button>
                 <button onClick={() => setMuted(!muted)} className="btn btn-secondary">
-                  {muted ? <VolumeX size={18} /> : <Volume2 size={18} />} {muted ? 'Unmute Coach' : 'Mute Coach'}
+                  {muted ? <VolumeX size={18} /> : <Volume2 size={18} />} {muted ? 'Unmute' : 'Mute'}
                 </button>
               </div>
             ) : (

@@ -22,6 +22,7 @@ model User {
   commStyle      String    @default("Professional") // "Professional" or "Calm" or "Supportive"
   resumeText     String?
   parsedSkills   String?   // JSON string of detected skills and tech stack
+  avatarUrl      String?
   streak         Int       @default(0)
   lastActive     DateTime?
   createdAt      DateTime  @default(now())

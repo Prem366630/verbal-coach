@@ -8,7 +8,12 @@ import {
   Moon, 
   LogOut,
   Sparkles,
-  Loader2
+  Loader2,
+  User,
+  Edit3,
+  Trash2,
+  X,
+  ShieldAlert
 } from 'lucide-react';
 import Dashboard from './components/Dashboard';
 import VoiceCoach from './components/VoiceCoach';
@@ -39,10 +44,11 @@ export interface UserProfile {
   streak: number;
   resumeText?: string;
   parsedSkills?: string;
+  avatarUrl?: string;
 }
 
 function App() {
-  const [user, setUser] = useState<{ id: number; name: string } | null>(null);
+  const [user, setUser] = useState<{ id: number; name: string; email?: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -55,6 +61,75 @@ function App() {
   const [errorMsg, setErrorMsg] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
   const [authSlowNotice, setAuthSlowNotice] = useState(false);
+
+  // Profile Dropdown & Modal States
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editAvatar, setEditAvatar] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const handleOpenEdit = () => {
+    if (profile) {
+      setEditName(profile.name || user?.name || '');
+      setEditAvatar(profile.avatarUrl || '');
+    }
+    setShowProfileMenu(false);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !editName.trim()) return;
+
+    try {
+      const res = await fetch(`${API_URL}/user/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          name: editName.trim(),
+          avatarUrl: editAvatar.trim()
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        setUser(prev => prev ? { ...prev, name: data.user.name } : null);
+        setProfile(prev => prev ? { ...prev, name: data.user.name, avatarUrl: data.user.avatarUrl } : null);
+        localStorage.setItem('user', JSON.stringify({ id: user.id, name: data.user.name }));
+        setShowEditModal(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeletingAccount(true);
+
+    try {
+      const res = await fetch(`${API_URL}/user/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+
+      if (res.ok) {
+        localStorage.removeItem('user');
+        setUser(null);
+        setProfile(null);
+        setShowDeleteModal(false);
+        setShowProfileMenu(false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
 
   // Onboarding Setup State
   const [isOnboarding, setIsOnboarding] = useState(false);
@@ -373,7 +448,7 @@ function App() {
           <Sparkles size={20} />
           <span>VerbalCoach</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
           <button 
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="btn btn-secondary" 
@@ -382,17 +457,44 @@ function App() {
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          <div style={{ background: 'var(--primary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: '0.85rem' }}>
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="btn btn-secondary" 
-            style={{ padding: '0.4rem', border: 'none', color: 'var(--accent-err)' }}
-            title="Logout"
+          
+          {/* Avatar Profile Trigger */}
+          <div 
+            onClick={() => setShowProfileMenu(!showProfileMenu)} 
+            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
           >
-            <LogOut size={18} />
-          </button>
+            {profile?.avatarUrl ? (
+              <img src={profile.avatarUrl} alt="Avatar" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+            ) : (
+              <div style={{ background: 'var(--primary)', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff', fontSize: '0.9rem' }}>
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+
+          {/* Top-Right Dropdown Menu */}
+          {showProfileMenu && (
+            <div className="card" style={{ position: 'absolute', top: '45px', right: '0', width: '230px', zIndex: 9999, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '0.5rem' }}>
+              <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--card-border)' }}>
+                <strong style={{ display: 'block', fontSize: '0.9rem' }}>{user.name}</strong>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{user.email}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.5rem' }}>
+                <button onClick={() => { setShowProfileMenu(false); setShowProfileModal(true); }} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}>
+                  <User size={16} /> Performance Profile
+                </button>
+                <button onClick={handleOpenEdit} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}>
+                  <Edit3 size={16} /> Edit Profile & Photo
+                </button>
+                <button onClick={handleLogout} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: 'var(--accent-warn)' }}>
+                  <LogOut size={16} /> Log Out
+                </button>
+                <button onClick={() => { setShowProfileMenu(false); setShowDeleteModal(true); }} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: 'var(--accent-err)' }}>
+                  <Trash2 size={16} /> Delete Account
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -436,7 +538,7 @@ function App() {
           </ul>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
           {/* Theme & User Profile info */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 0.5rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Theme</span>
@@ -449,26 +551,46 @@ function App() {
             </button>
           </div>
 
-          <div style={{ borderTop: '1px solid var(--card-border)', paddingTop: '1rem', display: 'flex', alignItems: 'center', justifySelf: 'flex-end', justifyContent: 'space-between' }}>
+          <div 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            style={{ borderTop: '1px solid var(--card-border)', paddingTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ background: 'var(--primary)', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>
-                {user.name.charAt(0).toUpperCase()}
-              </div>
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="Avatar" style={{ width: '34px', height: '34px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+              ) : (
+                <div style={{ background: 'var(--primary)', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff' }}>
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '120px' }}>
                 <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{user.name}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{profile?.targetRole || 'Onboarding'}</div>
               </div>
             </div>
             
-            <button 
-              onClick={handleLogout}
-              className="btn btn-secondary" 
-              style={{ padding: '0.4rem', border: 'none', color: 'var(--accent-err)' }}
-              title="Logout"
-            >
-              <LogOut size={16} />
-            </button>
+            <User size={18} style={{ color: 'var(--text-secondary)' }} />
           </div>
+
+          {/* Desktop Profile Menu */}
+          {showProfileMenu && (
+            <div className="card" style={{ position: 'absolute', bottom: '65px', left: '0', right: '0', zIndex: 9999, boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <button onClick={() => { setShowProfileMenu(false); setShowProfileModal(true); }} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}>
+                  <User size={16} /> Performance Profile
+                </button>
+                <button onClick={handleOpenEdit} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem' }}>
+                  <Edit3 size={16} /> Edit Profile & Photo
+                </button>
+                <button onClick={handleLogout} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: 'var(--accent-warn)' }}>
+                  <LogOut size={16} /> Log Out
+                </button>
+                <button onClick={() => { setShowProfileMenu(false); setShowDeleteModal(true); }} className="btn btn-secondary" style={{ justifyContent: 'flex-start', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: 'var(--accent-err)' }}>
+                  <Trash2 size={16} /> Delete Account
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -479,6 +601,83 @@ function App() {
         {activeTab === 'interview' && profile && <InterviewCenter profile={profile} />}
         {activeTab === 'learning' && profile && <LearningHub profile={profile} />}
       </main>
+
+      {/* Profile Performance Modal */}
+      {showProfileModal && profile && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="card" style={{ maxWidth: '500px', width: '100%', position: 'relative' }}>
+            <button onClick={() => setShowProfileModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <User style={{ color: 'var(--primary)' }} /> Performance Profile
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.9rem' }}>
+              <div><strong>Name:</strong> {user.name}</div>
+              <div><strong>Email:</strong> {user.email}</div>
+              <div><strong>Target Role:</strong> {profile.targetRole || 'Software Professional'}</div>
+              <div><strong>Education:</strong> {profile.education || 'N/A'}</div>
+              <div><strong>Streak:</strong> {profile.streak} Days</div>
+              <div><strong>Daily Goal:</strong> {profile.dailyDuration} minutes</div>
+              <div><strong>Communication Style:</strong> {profile.commStyle}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <form onSubmit={handleUpdateProfile} className="card" style={{ maxWidth: '450px', width: '100%', position: 'relative' }}>
+            <button type="button" onClick={() => setShowEditModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Edit3 style={{ color: 'var(--primary)' }} /> Edit Profile
+            </h2>
+            
+            <div className="form-group">
+              <label className="form-label">Display Name</label>
+              <input type="text" className="form-input" required value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Profile Photo Image URL (Optional)</label>
+              <input type="url" className="form-input" value={editAvatar} onChange={e => setEditAvatar(e.target.value)} placeholder="https://example.com/avatar.jpg" />
+            </div>
+
+            <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
+              Save Profile Changes
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Permanent Account Deletion Modal */}
+      {showDeleteModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div className="card" style={{ maxWidth: '480px', width: '100%', borderLeft: '4px solid var(--accent-err)', position: 'relative' }}>
+            <button onClick={() => setShowDeleteModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+              <X size={20} />
+            </button>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '0.75rem', color: 'var(--accent-err)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ShieldAlert size={22} /> Permanently Delete Account?
+            </h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              Are you sure you want to permanently delete your account? This action <strong>cannot be undone</strong> and will erase all your profile data, practice session transcripts, vocabulary vault records, and daily progress permanently from the cloud database.
+            </p>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setShowDeleteModal(false)} className="btn btn-secondary">
+                Cancel
+              </button>
+              <button type="button" onClick={handleDeleteAccount} disabled={deletingAccount} className="btn" style={{ background: 'var(--accent-err)' }}>
+                {deletingAccount ? <Loader2 className="spin" size={16} /> : <Trash2 size={16} />}
+                {deletingAccount ? 'Deleting Account...' : 'Permanently Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Bottom Navigation Bar (<768px) */}
       <nav className="mobile-bottom-nav">

@@ -332,6 +332,47 @@ Respond strictly with a valid JSON object matching this schema:
         return res.status(500).json({ error: 'Failed to analyze resume.' });
     }
 });
+// --- PROFILE EDIT & PERMANENT ACCOUNT DELETION ROUTES ---
+app.put('/api/user/profile', async (req, res) => {
+    const { userId, name, avatarUrl } = req.body;
+    if (!userId)
+        return res.status(400).json({ error: 'Missing userId' });
+    try {
+        const updated = await db_1.default.user.update({
+            where: { id: parseInt(userId) },
+            data: {
+                ...(name ? { name } : {}),
+                ...(avatarUrl !== undefined ? { avatarUrl } : {})
+            }
+        });
+        return res.json({ success: true, user: { id: updated.id, name: updated.name, avatarUrl: updated.avatarUrl } });
+    }
+    catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+app.delete('/api/user/delete', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId)
+        return res.status(400).json({ error: 'Missing userId' });
+    const uid = parseInt(userId);
+    try {
+        // Delete all associated candidate data in database
+        await db_1.default.$transaction([
+            db_1.default.session.deleteMany({ where: { userId: uid } }),
+            db_1.default.progress.deleteMany({ where: { userId: uid } }),
+            db_1.default.mistake.deleteMany({ where: { userId: uid } }),
+            db_1.default.vocabulary.deleteMany({ where: { userId: uid } }),
+            db_1.default.dailyPlan.deleteMany({ where: { userId: uid } }),
+            db_1.default.user.delete({ where: { id: uid } })
+        ]);
+        return res.json({ success: true, message: 'Account and associated records deleted permanently.' });
+    }
+    catch (error) {
+        console.error('Account deletion error:', error);
+        return res.status(500).json({ error: 'Failed to delete account permanently.' });
+    }
+});
 // --- WEBSOCKET VOICE SERVER ---
 wss.on('connection', (ws) => {
     console.log('New WebSocket connection established.');

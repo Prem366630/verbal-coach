@@ -317,6 +317,51 @@ Respond strictly with a valid JSON object matching this schema:
   }
 });
 
+// --- PROFILE EDIT & PERMANENT ACCOUNT DELETION ROUTES ---
+
+app.put('/api/user/profile', async (req, res) => {
+  const { userId, name, avatarUrl } = req.body;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  try {
+    const updated = await prisma.user.update({
+      where: { id: parseInt(userId) },
+      data: {
+        ...(name ? { name } : {}),
+        ...(avatarUrl !== undefined ? { avatarUrl } : {})
+      }
+    });
+
+    return res.json({ success: true, user: { id: updated.id, name: updated.name, avatarUrl: updated.avatarUrl } });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/user/delete', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  const uid = parseInt(userId);
+
+  try {
+    // Delete all associated candidate data in database
+    await prisma.$transaction([
+      prisma.session.deleteMany({ where: { userId: uid } }),
+      prisma.progress.deleteMany({ where: { userId: uid } }),
+      prisma.mistake.deleteMany({ where: { userId: uid } }),
+      prisma.vocabulary.deleteMany({ where: { userId: uid } }),
+      prisma.dailyPlan.deleteMany({ where: { userId: uid } }),
+      prisma.user.delete({ where: { id: uid } })
+    ]);
+
+    return res.json({ success: true, message: 'Account and associated records deleted permanently.' });
+  } catch (error: any) {
+    console.error('Account deletion error:', error);
+    return res.status(500).json({ error: 'Failed to delete account permanently.' });
+  }
+});
+
 // --- WEBSOCKET VOICE SERVER ---
 
 wss.on('connection', (ws: WebSocket) => {

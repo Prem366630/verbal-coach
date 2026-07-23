@@ -239,16 +239,16 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
           {/* Resume Parser Card */}
           <section className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
             <h2 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FileText style={{ color: 'var(--primary)' }} /> AI Resume & JD Parser (Gemini 1.5 Pro)
+              <FileText style={{ color: 'var(--primary)' }} /> AI Resume & Job Description Parser
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>
-              Paste your Resume text below. Gemini 1.5 Pro will extract your tech stack, project experience, and skill profile to generate 100% realistic interview questions.
+              Paste your Resume text below. The AI will extract your tech stack, project experience, and skill profile to generate 100% realistic interview questions.
             </p>
 
             <div className="form-group">
               <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Resume Text / Experience Overview</span>
-                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>Powered by Gemini 1.5 Pro</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>AI Background Analysis</span>
               </label>
               <textarea 
                 className="form-input" 
@@ -266,7 +266,7 @@ export default function InterviewCenter({ profile }: InterviewCenterProps) {
               style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: (parsingResume || !resumeText.trim()) ? 0.6 : 1 }}
             >
               {parsingResume ? <Loader2 className="spin" size={18} /> : <Sparkles size={18} />}
-              {parsingResume ? 'Analyzing Background with Gemini Pro...' : 'Analyze Resume & Link to AI Coach'}
+              {parsingResume ? 'Analyzing Resume Background...' : 'Analyze Resume & Link to AI Coach'}
             </button>
 
             {/* Extracted Profile Skills Summary Card */}
