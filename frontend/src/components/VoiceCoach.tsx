@@ -195,7 +195,7 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
           sendUserMessage(trimmed);
           setInterimInput('');
         }
-      }, 1500);
+      }, 5000);
     };
 
     recognition.onend = () => {
