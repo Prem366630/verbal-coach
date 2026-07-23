@@ -183,19 +183,9 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
       }
 
       const trimmed = text.trim();
-      if (!trimmed) return;
-
-      setInterimInput(trimmed);
-
-      // Reset auto-send silence timer
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-
-      silenceTimerRef.current = setTimeout(() => {
-        if (trimmed) {
-          sendUserMessage(trimmed);
-          setInterimInput('');
-        }
-      }, 5000);
+      if (trimmed) {
+        setInterimInput(trimmed);
+      }
     };
 
     recognition.onend = () => {
@@ -367,9 +357,9 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
                     onClick={handleDoneSpeaking} 
                     disabled={!interimInput.trim()} 
                     className="btn" 
-                    style={{ opacity: !interimInput.trim() ? 0.6 : 1 }}
+                    style={{ padding: '0.75rem 1.5rem', fontSize: '1rem', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', opacity: !interimInput.trim() ? 0.6 : 1 }}
                   >
-                    <Send size={18} /> Done Speaking (Send)
+                    <Send size={18} /> Stop & Send Answer
                   </button>
                 )}
                 <button onClick={stopSession} className="btn btn-secondary" style={{ color: 'var(--accent-err)' }}>
