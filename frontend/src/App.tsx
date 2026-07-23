@@ -118,9 +118,11 @@ function App() {
       });
 
       if (res.ok) {
+        sessionStorage.removeItem('coach_user');
         localStorage.removeItem('user');
         setUser(null);
         setProfile(null);
+        setIsRegister(false);
         setShowDeleteModal(false);
         setShowProfileMenu(false);
       }
@@ -205,6 +207,7 @@ function App() {
       const userSession = { id: data.userId, name: data.name };
       sessionStorage.setItem('coach_user', JSON.stringify(userSession));
       setUser(userSession);
+      setIsRegister(false);
       
       if (isRegister) {
         setIsOnboarding(true);
@@ -250,6 +253,7 @@ function App() {
     sessionStorage.removeItem('coach_user');
     setUser(null);
     setProfile(null);
+    setIsRegister(false);
   };
 
   if (!user) {

@@ -171,33 +171,31 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
     };
 
     recognition.onresult = (event: any) => {
-      // Interruption logic: If user starts speaking, immediately stop coach
+      // Interruption logic: If user starts speaking, immediately stop coach audio
       if (synthRef.current && synthRef.current.speaking) {
         synthRef.current.cancel();
         setCoachSpeaking(false);
       }
 
-      let interim = '';
-      let final = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          final += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
+      let text = '';
+      for (let i = 0; i < event.results.length; ++i) {
+        text += event.results[i][0].transcript;
       }
 
-      setInterimInput(interim || final);
+      const trimmed = text.trim();
+      if (!trimmed) return;
 
-      // Handle pause silence: trigger send message after 2.5 seconds of final text silence
-      if (final.trim().length > 0) {
-        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = setTimeout(() => {
-          sendUserMessage(final.trim());
+      setInterimInput(trimmed);
+
+      // Reset auto-send silence timer
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+      silenceTimerRef.current = setTimeout(() => {
+        if (trimmed) {
+          sendUserMessage(trimmed);
           setInterimInput('');
-        }, 2000);
-      }
+        }
+      }, 1500);
     };
 
     recognition.onend = () => {
@@ -423,6 +421,32 @@ export default function VoiceCoach({ profile }: VoiceCoachProps) {
                 </div>
               )}
             </div>
+
+            {/* Voice & Text Message Form */}
+            {activeSession && (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (interimInput.trim()) {
+                    sendUserMessage(interimInput.trim());
+                    setInterimInput('');
+                  }
+                }} 
+                style={{ display: 'flex', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid var(--card-border)' }}
+              >
+                <input 
+                  type="text" 
+                  className="form-input" 
+                  style={{ flexGrow: 1, fontSize: '0.9rem' }} 
+                  placeholder={coachSpeaking ? "Coach is talking..." : "Type or speak your answer..."} 
+                  value={interimInput}
+                  onChange={(e) => setInterimInput(e.target.value)}
+                />
+                <button type="submit" disabled={!interimInput.trim()} className="btn" style={{ padding: '0.5rem 1.2rem', opacity: !interimInput.trim() ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Send size={16} /> Send
+                </button>
+              </form>
+            )}
           </div>
         </div>
 
